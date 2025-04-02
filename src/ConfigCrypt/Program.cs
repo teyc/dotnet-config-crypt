@@ -1,9 +1,6 @@
 ﻿// Program.cs
 using CommandLine;
 using ConfigCrypt;
-using ConfigCrypt.Models;
-using System;
-using System.IO;
 
 class Program
 {

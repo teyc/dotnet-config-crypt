@@ -1,8 +1,4 @@
 // Tests/CryptoServiceTests.cs
-using ConfigCrypt;
-using System;
-using Xunit;
-
 namespace ConfigCrypt.UnitTests
 {
     public class CryptoServiceTests
