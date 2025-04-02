@@ -1,7 +1,10 @@
 
 // ConfigManager.cs
+using System.Buffers.Text;
+using System.Text;
 using ConfigCrypt.Models;
 using Newtonsoft.Json;
+using PanoramicData.ConsoleExtensions;
 
 namespace ConfigCrypt
 {
@@ -17,7 +20,7 @@ namespace ConfigCrypt
             _configFilePath = Path.Combine(_configDirectoryPath, "config.json");
         }
 
-        public ConfigCryptConfig LoadConfig()
+        public ConfigCryptConfig LoadConfig(bool interactive)
         {
             if (!Directory.Exists(_configDirectoryPath))
             {
@@ -26,10 +29,32 @@ namespace ConfigCrypt
 
             if (!File.Exists(_configFilePath))
             {
+                string aesKey;
+
+                if (interactive)
+                {
+                    Console.WriteLine("No configuration file found. Please enter a encryption/decryption key:");
+                    aesKey = ConsolePlus.ReadPassword();
+                    Console.WriteLine();
+                    try
+                    {
+                        Convert.FromBase64String(aesKey);
+                    }
+                    catch (FormatException)
+                    {
+                        Console.WriteLine("Invalid key format. Please enter a valid Base64 encoded key.");
+                        throw;
+                    }
+                }
+                else
+                {
+                    aesKey = GenerateRandomKey();
+                }
+
                 // Create default config
                 var defaultConfig = new ConfigCryptConfig
                 {
-                    AesKey = GenerateRandomKey(),
+                    AesKey = aesKey,
                     Secrets = new List<string> { "key", "password", "secret" },
                     Exclude = new List<string>()
                 };
@@ -43,7 +68,7 @@ namespace ConfigCrypt
             {
                 string jsonConfig = File.ReadAllText(_configFilePath);
                 var config = JsonConvert.DeserializeObject<ConfigCryptConfig>(jsonConfig);
-                
+
                 if (config == null)
                 {
                     throw new InvalidOperationException("Failed to deserialize configuration.");
@@ -67,14 +92,14 @@ namespace ConfigCrypt
             {
                 Console.WriteLine($"Error loading configuration: {ex.Message}");
                 Console.WriteLine("Creating a new default configuration.");
-                
+
                 var defaultConfig = new ConfigCryptConfig
                 {
                     AesKey = GenerateRandomKey(),
                     Secrets = new List<string> { "key", "password", "secret" },
                     Exclude = new List<string>()
                 };
-                
+
                 SaveConfig(defaultConfig);
                 return defaultConfig;
             }
