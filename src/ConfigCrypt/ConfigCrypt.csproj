@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-<PropertyGroup>
+  <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -27,14 +27,13 @@
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
   </ItemGroup>
 
+  <!-- Copy README.md before packing -->
+  <Target Name="CopyReadme" BeforeTargets="Build">
+    <Copy SourceFiles="../../README.md" DestinationFiles="$(ProjectDir)README.md" />
+  </Target>
+
   <ItemGroup>
-      <None Update="README.md">
-        <Pack>true</Pack>
-        <PackagePath>.</PackagePath>
-      </None>
+    <None Include="README.md" Pack="true" PackagePath="." />
   </ItemGroup>
 
-  <Target Name="CopyReadme" BeforeTargets="Pack">
-    <Copy SourceFiles="../../README.md" DestinationFiles="README.md" />
-  </Target>
 </Project>
