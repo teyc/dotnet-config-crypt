@@ -20,6 +20,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Extract version from tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
       - name: Restore dependencies
         run: dotnet restore
 
@@ -30,7 +33,7 @@ jobs:
         run: dotnet test --configuration Release --no-build --verbosity normal
 
       - name: Pack NuGet package
-        run: dotnet pack --configuration Release --no-build --output nupkg
+        run: dotnet pack --configuration Release --no-build --output nupkg /p:Version=${{ env.RELEASE_VERSION }}
 
       - name: Push package to NuGet
         run: dotnet nuget push nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate

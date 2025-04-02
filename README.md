@@ -99,29 +99,6 @@ Configuration is stored in `~/.config-crypt/config.json` and contains:
 - The tool uses AES-GCM, which provides both confidentiality and authenticity.
 - Each encryption operation uses a unique nonce (number used once) to prevent replay attacks.
 
-## Development
-
-### Building from source
-
-```bash
-git clone https://github.com/yourusername/config-crypt.git
-cd config-crypt
-dotnet build
-```
-
-### Running tests
-
-```bash
-dotnet test
-```
-
-### Installing the development version
-
-```bash
-dotnet pack
-dotnet tool install --global --add-source ./nupkg config-crypt
-```
-
 ## License
 
 MIT

@@ -8,6 +8,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>config-crypt</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageReadmeFile>../../README.md</PackageReadmeFile> 
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,4 +27,14 @@
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
   </ItemGroup>
 
+  <ItemGroup>
+      <None Update="README.md">
+        <Pack>true</Pack>
+        <PackagePath>.</PackagePath>
+      </None>
+  </ItemGroup>
+
+  <Target Name="CopyReadme" BeforeTargets="Pack">
+    <Copy SourceFiles="../../README.md" DestinationFiles="README.md" />
+  </Target>
 </Project>
