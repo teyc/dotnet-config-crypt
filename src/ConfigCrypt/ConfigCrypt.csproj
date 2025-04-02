@@ -8,7 +8,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>config-crypt</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
-    <PackageReadmeFile>../../README.md</PackageReadmeFile> 
+    <PackageReadmeFile>README.md</PackageReadmeFile> 
   </PropertyGroup>
 
   <PropertyGroup>
