@@ -1,7 +1,5 @@
-﻿
-// Program.cs
-using CommandLineParser;
-using CommandLineParser.Arguments;
+﻿// Program.cs
+using CommandLine;
 using ConfigCrypt;
 using ConfigCrypt.Models;
 using System;
@@ -9,29 +7,49 @@ using System.IO;
 
 class Program
 {
+    // Define the options for the commands
+    [Verb("crypt", HelpText = "Encrypt a JSON file")]
+    class CryptOptions
+    {
+        [Value(0, MetaName = "input", Required = true, HelpText = "Input JSON file path")]
+        public string InputFile { get; set; }
+
+        [Value(1, MetaName = "output", Required = false, HelpText = "Output encrypted JSON file path")]
+        public string OutputFile { get; set; }
+    }
+
+    [Verb("decrypt", HelpText = "Decrypt a JSON file")]
+    class DecryptOptions
+    {
+        [Value(0, MetaName = "input", Required = true, HelpText = "Input encrypted JSON file path")]
+        public string InputFile { get; set; }
+
+        [Value(1, MetaName = "output", Required = false, HelpText = "Output decrypted JSON file path")]
+        public string OutputFile { get; set; }
+    }
+
     static int Main(string[] args)
+    {
+        return Parser.Default.ParseArguments<CryptOptions, DecryptOptions>(args)
+            .MapResult(
+                (CryptOptions opts) => RunCryptCommand(opts),
+                (DecryptOptions opts) => RunDecryptCommand(opts),
+                errs => 1);
+    }
+
+    static int RunCryptCommand(CryptOptions opts)
     {
         try
         {
-            var parser = new CommandLineParser.CommandLineParser();
+            string inputFile = opts.InputFile;
+            string outputFilePath = opts.OutputFile ?? Path.ChangeExtension(inputFile, ".encrypted.json");
             
-            var cryptCommand = new ValueArgument<string>('c', "crypt", "Encrypt JSON file");
-            var decryptCommand = new ValueArgument<string>('d', "decrypt", "Decrypt JSON file");
-            var outputFile = new ValueArgument<string>('o', "output", "Output file path");
-            
-            parser.Arguments.Add(cryptCommand);
-            parser.Arguments.Add(decryptCommand);
-            parser.Arguments.Add(outputFile);
-            
-            // Parse the arguments
-            parser.ParseCommandLine(args);
-
-            if (args.Length == 0 || (args.Length > 0 && (args[0] == "--help" || args[0] == "-h")))
+            if (!File.Exists(inputFile))
             {
-                ShowHelp();
-                return 0;
+                Console.WriteLine($"Error: Input file '{inputFile}' does not exist.");
+                return 1;
             }
-
+            
             var configManager = new ConfigManager();
             var config = configManager.LoadConfig();
             
@@ -44,85 +62,61 @@ class Program
             var cryptoService = new CryptoService(config.AesKey);
             var jsonProcessor = new JsonProcessor(cryptoService, config);
             
-            // Handle command: crypt
-            if (args.Length >= 2 && args[0] == "crypt")
-            {
-                string inputFile = args[1];
-                string outputFilePath = args.Length >= 3 ? args[2] : Path.ChangeExtension(inputFile, ".encrypted.json");
-                
-                if (!File.Exists(inputFile))
-                {
-                    Console.WriteLine($"Error: Input file '{inputFile}' does not exist.");
-                    return 1;
-                }
-                
-                string jsonContent = File.ReadAllText(inputFile);
-                
-                try
-                {
-                    string processedJson = jsonProcessor.ProcessForEncryption(jsonContent);
-                    File.WriteAllText(outputFilePath, processedJson);
-                    Console.WriteLine($"Successfully encrypted JSON to {outputFilePath}");
-                    return 0;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error encrypting JSON: {ex.Message}");
-                    return 1;
-                }
-            }
-            
-            // Handle command: decrypt
-            else if (args.Length >= 2 && args[0] == "decrypt")
-            {
-                string inputFile = args[1];
-                string outputFilePath = args.Length >= 3 ? args[2] : 
-                    inputFile.EndsWith(".encrypted.json") ? 
-                        inputFile.Replace(".encrypted.json", ".json") : 
-                        Path.ChangeExtension(inputFile, ".decrypted.json");
-                
-                if (!File.Exists(inputFile))
-                {
-                    Console.WriteLine($"Error: Input file '{inputFile}' does not exist.");
-                    return 1;
-                }
-                
-                string jsonContent = File.ReadAllText(inputFile);
-                
-                try
-                {
-                    string processedJson = jsonProcessor.ProcessForDecryption(jsonContent);
-                    File.WriteAllText(outputFilePath, processedJson);
-                    Console.WriteLine($"Successfully decrypted JSON to {outputFilePath}");
-                    return 0;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error decrypting JSON: {ex.Message}");
-                    return 1;
-                }
-            }
-            else
-            {
-                ShowHelp();
-                return 1;
-            }
+            string jsonContent = File.ReadAllText(inputFile);
+            string processedJson = jsonProcessor.ProcessForEncryption(jsonContent);
+            File.WriteAllText(outputFilePath, processedJson);
+            Console.WriteLine($"Successfully encrypted JSON to {outputFilePath}");
+            return 0;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Error encrypting JSON: {ex.Message}");
             return 1;
         }
     }
-    
-    static void ShowHelp()
+
+    static int RunDecryptCommand(DecryptOptions opts)
     {
-        Console.WriteLine("config-crypt - JSON file encryption and decryption tool");
-        Console.WriteLine();
-        Console.WriteLine("Usage:");
-        Console.WriteLine("  config-crypt crypt <inputFile.json> [outputFile.encrypted.json]");
-        Console.WriteLine("  config-crypt decrypt <inputFile.encrypted.json> [outputFile.json]");
-        Console.WriteLine();
-        Console.WriteLine("Configuration is stored in ~/.config-crypt/config.json");
+        try
+        {
+            string inputFile = opts.InputFile;
+            string outputFilePath = opts.OutputFile;
+            
+            if (outputFilePath == null)
+            {
+                outputFilePath = inputFile.EndsWith(".encrypted.json") ? 
+                    inputFile.Replace(".encrypted.json", ".json") : 
+                    Path.ChangeExtension(inputFile, ".decrypted.json");
+            }
+            
+            if (!File.Exists(inputFile))
+            {
+                Console.WriteLine($"Error: Input file '{inputFile}' does not exist.");
+                return 1;
+            }
+            
+            var configManager = new ConfigManager();
+            var config = configManager.LoadConfig();
+            
+            if (string.IsNullOrEmpty(config.AesKey))
+            {
+                Console.WriteLine("Error: No AES key found in configuration.");
+                return 1;
+            }
+            
+            var cryptoService = new CryptoService(config.AesKey);
+            var jsonProcessor = new JsonProcessor(cryptoService, config);
+            
+            string jsonContent = File.ReadAllText(inputFile);
+            string processedJson = jsonProcessor.ProcessForDecryption(jsonContent);
+            File.WriteAllText(outputFilePath, processedJson);
+            Console.WriteLine($"Successfully decrypted JSON to {outputFilePath}");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error decrypting JSON: {ex.Message}");
+            return 1;
+        }
     }
 }

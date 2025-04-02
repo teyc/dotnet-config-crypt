@@ -82,7 +82,7 @@ namespace ConfigCrypt
                 
                 case JTokenType.Array:
                     int index = 0;
-                    foreach (var item in token.Children())
+                    foreach (var item in token.Children().ToArray())
                     {
                         ProcessTokenForEncryption(item, $"{path}[{index}]");
                         index++;
@@ -139,7 +139,7 @@ namespace ConfigCrypt
                 
                 case JTokenType.Array:
                     int index = 0;
-                    foreach (var item in token.Children())
+                    foreach (var item in token.Children().ToArray())
                     {
                         ProcessTokenForDecryption(item, $"{path}[{index}]");
                         index++;

@@ -64,7 +64,7 @@ namespace ConfigCrypt
                 throw new ArgumentException("Invalid encrypted format");
             }
             
-            string base64Content = encryptedText.Substring(13, encryptedText.Length - 14);
+            string base64Content = encryptedText.Substring(14, encryptedText.Length - 15);
             byte[] cipherBytes = Convert.FromBase64String(base64Content);
             
             if (cipherBytes.Length < NonceSize + TagSize)
