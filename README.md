@@ -27,20 +27,24 @@ dotnet tool install --global config-crypt
 ### Encrypting a JSON file
 
 ```bash
-config-crypt crypt filename.json [filename.encrypted.json]
+config-crypt crypt appsettings.json [appsettings.encrypted.json] [--interactive]
 ```
 
-The output file is optional. If not specified, it will default to `filename.encrypted.json`.
+The output file is optional. If not specified, it will default to `appsettings.encrypted.json`.
+
+Specify `--interactive` if you would like to provide an encryption key, 
+rather than a random one generated for you. The encryption key will be 
+stored locally (see [Configuration](#Configuration)).
 
 ### Decrypting a JSON file
 
 ```bash
-config-crypt decrypt filename.encrypted.json [filename.json]
+config-crypt decrypt appsettings.encrypted.json [appsettings.json] [--interactive]
 ```
 
 The output file is optional. If not specified, it will be inferred from the input file name by:
 - Replacing `.encrypted.json` with `.json` if present
-- Otherwise, using `filename.decrypted.json`
+- Otherwise, using `appsettings.decrypted.json`
 
 ## Configuration
 
