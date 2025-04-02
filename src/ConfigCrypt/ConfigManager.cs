@@ -27,7 +27,14 @@ namespace ConfigCrypt
                 Directory.CreateDirectory(_configDirectoryPath);
             }
 
-            if (!File.Exists(_configFilePath))
+            if (File.Exists(_configFilePath))
+            {
+                if (interactive)
+                {
+                    Console.Error.WriteLine($"Encryption key is already set in the configuration file. Please delete {_configFilePath} to reset.");
+                }
+            }
+            else
             {
                 string aesKey;
 
